@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mark Attendance</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <ul class="nav-links student-nav">
+                <li><a href="home.html">Home</a></li>
+                <li><a href="attendance.html">Mark Attendance</a></li>
+                <li><a href="records.html">Records</a></li>
+                <li><a href="index.html">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="attendance-container">
+        <h1 class="page-title">Mark Attendance</h1>
+
+        <div class="camera-feed-box">
+            <video id="camera" class="camera-video" autoplay muted></video>
+        </div>
+
+        <div class="action-bar mark-present-bar">
+    <button id="markPresentBtn" class="action-button mark-present-btn">Mark Present</button>
+</div>
+
+<div class="action-bar camera-control-bar">
+    <button id="startCameraBtn" class="action-button start-camera-btn">Start Camera</button>
+    <button id="closeCameraBtn" class="action-button close-camera-btn">Close Camera</button>
+</div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

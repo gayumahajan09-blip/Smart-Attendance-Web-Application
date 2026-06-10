@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance Records</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .center-container {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      width: 100%;
+      margin-top: 24px;
+      padding: 0 18px;
+      box-sizing: border-box;
+    }
+    .center-container h1{ text-align:left; margin:0 0 12px 0; font-size:1.6rem }
+    #recordsTable{ width:100%; border-collapse:separate; border-spacing:0; box-shadow:0 4px 18px rgba(0,0,0,0.06); border-radius:8px; overflow:hidden }
+    #recordsTable thead th{ background:#0b7285; color:#fff; font-weight:700; padding:12px 14px; text-align:left; font-size:0.95rem }
+    #recordsTable tbody td{ background:#fff; padding:12px 14px; vertical-align:middle; font-size:0.95rem; color:#1f2937 }
+    #recordsTable tbody tr:nth-child(even) td{ background:#fbfcfd }
+    .snapshot-thumb{ width:56px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #e6eef2 }
+    .no-records{ text-align:center; padding:20px; color:#64748b }
+    @media (max-width:900px){
+      #recordsTable thead th:nth-child(8), #recordsTable tbody td:nth-child(8){ display:none }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" style="display:block;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 24px;">
+      <span class="navbar-title">ATTENDANCE MANAGEMENT</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="clearRecordsBtn" title="Clear all attendance records" style="height:36px;padding:8px 12px;border-radius:18px;border:1px solid #e11d48;background:#fff;color:#e11d48;cursor:pointer;font-weight:600">Clear</button>
+        <a href="landing.html" title="Logout" style="display:flex;align-items:center;justify-content:center;width:90px;height:38px;background:#fff;border-radius:19px;color:#34495e;font-size:1em;font-weight:bold;text-decoration:none;border:1px solid #ccc;">Logout</a>
+      </div>
+    </div>
+    <ul class="navbar-links" style="margin:0;padding:0;">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="students.html">Manage Students</a></li>
+      <li><a href="records.html">Records</a></li>
+      <li><a href="landing.html">Logout</a></li>
+    </ul>
+  </nav>
+  <main>
+    <div class="center-container">
+      <h1>Attendance Records</h1>
+      <table id="recordsTable">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>Student</th>
+            <th>Date</th>
+            <th>Subject</th>
+            <th>Class</th>
+            <th>Status</th>
+            <th>Marked At</th>
+            <th style="width:80px">Snapshot</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    // Populate teacher records table from localStorage 'sam_attendance'
+    (function(){
+      const tbody = document.querySelector('#recordsTable tbody');
+      function render(){
+        try{
+              const all = JSON.parse(localStorage.getItem('sam_attendance')||'[]');
+              if(!all || !all.length){
+                tbody.innerHTML = '<tr><td colspan="8" class="no-records">No attendance records yet.</td></tr>';
+                return;
+              }
+              // Sort by timestamp desc
+              all.sort((a,b)=> (b.ts||0) - (a.ts||0));
+              const rows = all.map((r, idx)=>{
+                const name = r.fullname || r.username || '-';
+                const date = r.date || '';
+                const subj = r.subject || '-';
+                const classroom = r.classroom || r.class || '-';
+                const status = r.status || '-';
+                const marked = r.ts ? new Date(r.ts).toLocaleString() : '';
+                const snap = r.snapshot || '';
+                const snapHtml = snap ? `<img class="snapshot-thumb" src="${snap}" alt="snap">` : '';
+                return `<tr><td>${idx+1}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(date)}</td><td>${escapeHtml(subj)}</td><td>${escapeHtml(classroom)}</td><td>${escapeHtml(status)}</td><td>${escapeHtml(marked)}</td><td>${snapHtml}</td></tr>`;
+              }).join('');
+              tbody.innerHTML = rows;
+        }catch(e){
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:18px;color:#b91c1c">Error reading records.</td></tr>';
+        }
+      }
+      function escapeHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+      // initial render
+      render();
+      // expose render so external handlers can re-render after clearing
+      window.renderAttendanceRecords = render;
+
+      // Optional: observe localStorage changes in case attendance is added while page open
+      window.addEventListener('storage', function(e){ if(e.key === 'sam_attendance') render(); });
+    })();
+
+    // Clear button handler (teacher action)
+    (function(){
+      const btn = document.getElementById('clearRecordsBtn');
+      if(!btn) return;
+      btn.addEventListener('click', function(){
+        const ok = confirm('Are you sure you want to clear ALL attendance records? This cannot be undone.');
+        if(!ok) return;
+        try{
+          localStorage.removeItem('sam_attendance');
+        }catch(e){ }
+        // Re-render table if function exposed, otherwise reload page
+        if(typeof window.renderAttendanceRecords === 'function'){
+          window.renderAttendanceRecords();
+        }else{
+          location.reload();
+        }
+        alert('Attendance records cleared.');
+      });
+    })();
+  </script>
+
+  <script src="script.js"></script>
+  
+</body>
+</html>

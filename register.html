@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - Smart Attendance</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: #f6f8fa; margin:0; font-family: 'Segoe UI', Arial, sans-serif; }
+    .header-bar{ background:#34495e;color:#fff;text-align:center;padding:20px 0;font-weight:700 }
+    .card{ background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(52,73,94,0.10);max-width:420px;margin:40px auto;padding:28px }
+    .card-title{ font-size:1.3rem;color:#34495e;font-weight:700;margin-bottom:18px;text-align:center }
+    .tab-container{ display:flex;width:100%;background:#f1f5f8;border-radius:10px;overflow:hidden;margin-bottom:18px }
+    .tab{ flex:1;padding:10px;text-align:center;cursor:pointer;color:#64748b;font-weight:600 }
+    .tab.active{ background:#fff;color:#0b7285;box-shadow:0 2px 8px rgba(52,73,94,0.06) }
+    .form-group{ margin-bottom:12px }
+    .form-label{ display:block;margin-bottom:6px;color:#34495e;font-weight:600 }
+    .form-input{ width:100%;padding:10px 12px;border-radius:8px;border:1px solid #e6eef2;background:#f8fafb }
+    .btn{ width:100%;padding:12px;border-radius:8px;border:none;background:#1687a0;color:#fff;font-weight:700;cursor:pointer }
+    .small-link{ display:block;text-align:center;margin-top:12px;color:#1687a0 }
+    .msg{ text-align:center;font-weight:700;margin-top:10px }
+    .msg.error{ color:#b91c1c }
+    .msg.success{ color:#15803d }
+  </style>
+</head>
+<body>
+  <div class="header-bar">Smart Attendance - Register</div>
+  <div class="card">
+    <div class="card-title">Create an account</div>
+    <div class="tab-container" role="tablist">
+      <div class="tab active" data-role="teacher" id="reg-tab-teacher">Teacher</div>
+      <div class="tab" data-role="student" id="reg-tab-student">Student</div>
+    </div>
+
+    <form id="regForm" onsubmit="event.preventDefault();handleRegister();">
+      <div class="form-group">
+        <label class="form-label" for="fullname">Full name</label>
+        <input id="fullname" class="form-input" type="text" placeholder="Your full name" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg_username">Username / Email</label>
+        <input id="reg_username" class="form-input" type="text" placeholder="your.email@school.edu or ID" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg_password">Password</label>
+        <input id="reg_password" class="form-input" type="password" placeholder="Enter password" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg_confirm">Confirm password</label>
+        <input id="reg_confirm" class="form-input" type="password" placeholder="Repeat password" required>
+      </div>
+
+      <button class="btn" type="submit">Register</button>
+      <div id="regMsg" class="msg" style="display:none"></div>
+    </form>
+
+    <a class="small-link" href="landing.html">Already have an account? Login here</a>
+  </div>
+
+  <script>
+    (function(){
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(t => t.addEventListener('click', ()=>{ tabs.forEach(x=>x.classList.remove('active')); t.classList.add('active'); }));
+
+      function normalize(u){ return (u||'').trim().toLowerCase(); }
+
+      window.handleRegister = function(){
+        const role = document.querySelector('.tab.active').dataset.role || 'teacher';
+        const name = document.getElementById('fullname').value.trim();
+        const username = document.getElementById('reg_username').value.trim();
+        const password = document.getElementById('reg_password').value;
+        const confirm = document.getElementById('reg_confirm').value;
+        const msg = document.getElementById('regMsg');
+        msg.style.display = 'none';
+
+        if(!name || !username || !password || !confirm){
+          msg.textContent = 'Please fill all fields.'; msg.className='msg error'; msg.style.display='block'; return;
+        }
+        if(password !== confirm){ msg.textContent='Passwords do not match.'; msg.className='msg error'; msg.style.display='block'; return; }
+
+        const key = 'sam_users';
+        const users = JSON.parse(localStorage.getItem(key) || '[]');
+        // check username uniqueness per role
+        const exists = users.find(u=> normalize(u.username) === normalize(username) && u.role === role);
+        if(exists){ msg.textContent='Username already taken for this role.'; msg.className='msg error'; msg.style.display='block'; return; }
+
+        users.push({ fullname: name, username: username, password: password, role: role, created: Date.now() });
+        localStorage.setItem(key, JSON.stringify(users));
+        msg.textContent = 'Account created successfully. Redirecting to login...'; msg.className='msg success'; msg.style.display='block';
+        setTimeout(()=>{ window.location.href = 'landing.html'; }, 1400);
+      };
+    })();
+  </script>
+  
+</body>
+</html>

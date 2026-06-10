@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ATTENDANCE MANAGEMENT SYSTEM</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #f6f8fa;
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    .header-bar {
+      background: #34495e;
+      color: #fff;
+      text-align: center;
+      padding: 32px 0 24px 0;
+      font-size: 2.3em;
+      font-weight: 700;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 8px rgba(52,73,94,0.08);
+      text-transform: uppercase;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(52,73,94,0.10);
+      max-width: 400px;
+      margin: 60px auto 0 auto;
+      padding: 40px 32px 32px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card-title {
+      font-size: 1.5em;
+      color: #34495e;
+      font-weight: 600;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 16px 0;
+      font-size: 1.2em;
+      font-weight: 600;
+      color: #fff;
+      background: #1690a0;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(52,73,94,0.08);
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      margin-bottom: 24px;
+      transition: background 0.2s;
+      display: block;
+    }
+    .login-btn:last-child {
+      margin-bottom: 0;
+    }
+    .login-btn:hover {
+      background: #1690a0;
+    }
+    @media (max-width: 500px) {
+      .card {
+        max-width: 95vw;
+        padding: 24px 8px;
+      }
+      .header-bar {
+        font-size: 1.4em;
+        padding: 18px 0 12px 0;
+      }
+    }
+    /* Added styles for tabbed login form */
+    .tab-container {
+      display: flex;
+      width: 100%;
+      background: #f1f5f8;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.02);
+    }
+    .tab {
+      flex: 1 1 0;
+      padding: 12px 10px;
+      text-align: center;
+      cursor: pointer;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .tab.active {
+      background: #fff;
+      color: #0b7285;
+      box-shadow: 0 2px 8px rgba(52,73,94,0.06);
+    }
+    .login-form {
+      width: 100%;
+    }
+    .form-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 14px;
+    }
+    .form-label {
+      font-size: 0.9rem;
+      color: #34495e;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #e6eef2;
+      background: #f8fafb;
+      font-size: 1rem;
+      color: #213142;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .form-input:focus {
+      border-color: #bfeaf6;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(11,114,133,0.06);
+    }
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .small-link {
+      color: #1687a0;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .secure-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background: #1687a0;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 3px 12px rgba(11,114,133,0.12);
+    }
+    .card-footer {
+      margin-top: 18px;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      text-align: center;
+      width: 100%;
+    }
+    .password-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #64748b;
+      font-size: 0.95rem;
+      padding: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bar">Attendance Management System</div>
+  <div class="card">
+    <div class="card-title">WELCOME TO SMART ATTENDANCE</div>
+    <div class="tab-container" role="tablist">
+      <div class="tab active" data-role="teacher" id="tab-teacher">Teacher</div>
+      <div class="tab" data-role="student" id="tab-student">Student</div>
+    </div>
+
+    <form class="login-form" id="loginForm" onsubmit="event.preventDefault();handleLogin();">
+      <div class="form-group">
+        <label class="form-label" for="username">Username or Email</label>
+        <input id="username" class="form-input" name="username" type="text" placeholder="Enter your username or email" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="password-wrap">
+          <input id="password" class="form-input" name="password" type="password" placeholder="Enter your secure password" required>
+          <button type="button" class="password-toggle" id="togglePwd" aria-label="Toggle password">Show</button>
+        </div>
+      </div>
+
+      <div class="row-between">
+        <label style="display:flex;align-items:center;font-weight:600;color:#34495e;">
+          <input type="checkbox" id="remember" style="margin-right:8px"> Remember me
+        </label>
+  <a href="forgot.html" class="small-link">Forgot password?</a>
+      </div>
+
+      <button class="secure-btn" type="submit">Login</button>
+      <div id="loginError" style="display:none;margin-top:12px;color:#b91c1c;font-weight:700;text-align:center;font-size:0.95rem;"></div>
+    </form>
+
+    <div class="card-footer">Protected by basic security — Need access? Contact your system administrator</div>
+
+  <div style="margin-top:10px;font-size:0.95rem;color:#64748b;">No account? <a href="register.html" class="small-link">Register here</a></div>
+
+    <script>
+      // Tab switching
+      (function(){
+        const tabs = document.querySelectorAll('.tab');
+        let role = 'teacher';
+        tabs.forEach(t => t.addEventListener('click', () => {
+          tabs.forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          role = t.dataset.role;
+          // You can adapt placeholders per role if desired
+          const username = document.getElementById('username');
+          if(role === 'teacher') username.placeholder = 'your.email@school.edu or teacherID';
+          else username.placeholder = 'studentID or student.email@school.edu';
+        }));
+
+        // Password toggle
+        const pwd = document.getElementById('password');
+        const toggle = document.getElementById('togglePwd');
+        toggle.addEventListener('click', ()=>{
+          if(pwd.type === 'password'){
+            pwd.type = 'text';
+            toggle.textContent = 'Hide';
+          } else {
+            pwd.type = 'password';
+            toggle.textContent = 'Show';
+          }
+        });
+
+        // Login handler using localStorage-stored users
+        window.handleLogin = function(){
+          const role = document.querySelector('.tab.active').dataset.role || 'teacher';
+          const u = document.getElementById('username').value.trim();
+          const p = document.getElementById('password').value;
+          const remember = document.getElementById('remember').checked;
+          const errEl = document.getElementById('loginError');
+          errEl.style.display = 'none';
+
+          if(!u || !p){
+            errEl.textContent = 'Please enter username and password.';
+            errEl.style.display = 'block';
+            return;
+          }
+
+          const users = JSON.parse(localStorage.getItem('sam_users') || '[]');
+          const matched = users.find(it => (it.username.toLowerCase() === u.toLowerCase()) && it.password === p && it.role === role);
+          if(matched){
+            // Save current session (will be used by dashboards)
+            try{ localStorage.setItem('sam_session', JSON.stringify({username: matched.username, role: matched.role, fullname: matched.fullname || ''})); }catch(e){}
+            // Save last logged in (optional)
+            if(remember) localStorage.setItem('sam_lastuser', JSON.stringify({username:matched.username,role:matched.role}));
+            // Redirect: teacher -> index.html, student -> student dashboard if exists
+            if(role === 'student') window.location.href = 'studentdasboard.html';
+            else window.location.href = 'home.html';
+          } else {
+            errEl.textContent = 'Invalid login. Please check your username and password.';
+            errEl.style.display = 'block';
+            document.getElementById('password').focus();
+          }
+        };
+      })();
+    </script>
+
+    <script src="script.js"></script>
+  </div>
+</body>
+</html>

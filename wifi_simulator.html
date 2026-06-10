@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WiFi Simulator (demo)</title>
+  <style>
+    body { font-family: system-ui, Arial; max-width: 520px; margin: 40px auto; }
+    label { display:block; margin:10px 0 6px; color:#333; }
+    input { width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; }
+    button { margin-top:12px; padding:10px 14px; border:none; background:#0b74de; color:#fff; border-radius:6px; cursor:pointer; }
+    small { display:block; margin-top:12px; color:#555; }
+  </style>
+</head>
+<body>
+  <h2>WiFi Simulator (demo)</h2>
+  <p>Simulate being on campus WiFi. This sets a demo cookie allowing access to student-only pages on this machine.</p>
+
+  <label>SSID (name):</label>
+  <input id="ssid" value="COLLEGE_WIFI">
+
+  <label>Password:</label>
+  <input id="password" type="password" value="12345">
+
+  <button id="connectBtn">Connect (simulate)</button>
+  <button id="disconnectBtn" style="background:#888;">Disconnect</button>
+
+  <small id="status">Status: not connected</small>
+
+  <script>
+    async function connectToWifi() {
+      const ssid = document.getElementById("ssid").value;
+      const password = document.getElementById("password").value;
+      // Attempt to notify Node server to set the demo cookie (works cross-origin when server allows credentials)
+      try{
+        const resp = await fetch('http://localhost:3001/api/demo-connect', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ssid: ssid, pwd: password })
+        });
+        if(resp.ok){
+          localStorage.setItem('wifiConnected','true');
+          document.getElementById('status').innerText = 'Status: connected';
+          alert('Connected (demo). You can access student pages now.');
+          return;
+        }
+      }catch(e){ /* ignore and fallback to client cookie */ }
+
+      // Fallback client-only cookie (works only for pages on same origin)
+      document.cookie = 'sam_oncampus=1; path=/';
+      localStorage.setItem('wifiConnected','true');
+      document.getElementById('status').innerText = 'Status: connected (client-only)';
+      alert('Connected (demo, client-only). If student pages are on a different origin, open the simulator from the Node origin to enable full demo.');
+    }
+    function disconnectWifi() {
+      // Clear flag and expire cookie
+      localStorage.removeItem('wifiConnected');
+      // request Node server to clear cookie by issuing demo-connect with empty values and expiring
+      try{ fetch('http://localhost:3001/api/demo-connect', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ssid:'', pwd:'' }) }); }catch(e){}
+      document.cookie = 'sam_oncampus=; path=/; Max-Age=0';
+      document.getElementById('status').innerText = 'Status: not connected';
+      alert('Disconnected.');
+    }
+
+    document.getElementById('connectBtn').addEventListener('click', connectToWifi);
+    document.getElementById('disconnectBtn').addEventListener('click', disconnectWifi);
+  </script>
+  <script>
+    (function(){
+      if(document.getElementById('globalLogoutBtn')) return;
+      const a = document.createElement('a');
+      a.id = 'globalLogoutBtn';
+      a.href = 'landing.html';
+      a.textContent = 'Logout';
+      Object.assign(a.style, {position:'fixed', top:'12px', right:'12px', zIndex:999999, background:'#fff', color:'#34495e', padding:'8px 12px', borderRadius:'19px', textDecoration:'none', fontWeight:'700', border:'1px solid #ccc', display:'flex', alignItems:'center', justifyContent:'center', width:'90px', height:'38px'});
+      document.body.appendChild(a);
+    })();
+  </script>
+</body>
+</html>

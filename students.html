@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Students - Smart Attendance</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+      .student-list-table th {
+        font-size: 1.3em;      /* Increase this value for larger headings */
+        font-family: 'Segoe UI', Arial, sans-serif; /* Change font if you want */
+        font-weight: 700;
+        padding: 12px 18px;
+        text-align: center;
+      }
+    </style>
+    <style>
+  .center-table-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+    
+    <nav class="navbar" style="display:block;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 24px;">
+        <span class="navbar-title">ATTENDANCE MANAGEMENT</span>
+        <a href="landing.html" title="Logout" style="
+          display:flex;align-items:center;justify-content:center;width:90px;height:38px;background:#fff;border-radius:19px;color:#34495e;font-size:1em;font-weight:bold;text-decoration:none;border:1px solid #ccc;">
+          Logout
+        </a>
+      </div>
+      <ul class="navbar-links" style="margin:0;padding:0;">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="students.html">Manage Students</a></li>
+        <li><a href="records.html">Records</a></li>
+        <li><a href="landing.html">Logout</a></li>
+      </ul>
+    </nav>
+
+    <main class="dashboard-main students-page">
+        
+       <h1 class="page-title" style="text-align: center;">Manage Students</h1>
+
+        
+        
+
+<div class="add-student-section" >  <input type="text" id="studentNameInput" placeholder="Enter student name">
+  <input type="text" id="studentRollInput" placeholder="Enter roll no">
+  <button onclick="addStudent()">Add Student</button>
+  <button onclick="clearStudentList()" style="background:#e74c3c;color:#fff;">Clear List</button>
+</div>
+
+
+<div class="center-table-container">
+  <table class="student-list-table">
+  <thead>
+    <tr>
+      <th>Sr No</th>
+      <th>Name of Student</th>
+      <th>Roll No</th>
+      <th>Delete</th>
+    </tr>
+  </thead>
+  <tbody id="studentListContainer"></tbody>
+</table>
+</div>
+       
+
+    </main>
+<script>
+  document.getElementById('studentNameInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      addStudent();
+    }
+  });
+  document.getElementById('studentRollInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      addStudent();
+    }
+  });
+</script>
+  
+    </body>
+</html>
+    <script src="script.js"></script>

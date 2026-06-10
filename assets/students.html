@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Students - Smart Attendance</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+    <div class="navbar-content">
+        <ul class="nav-links student-nav">
+            <li><a href="home.html">Home</a></li>
+            <li><a href="attendance.html">Mark Attendance</a></li>
+            <li><a href="records.html">Records</a></li>
+            <li><a href="index.html">Logout</a></li>
+        </ul>
+    </div>
+</nav>
+
+    <main class="student-management-container">
+        <h1 class="page-title">Manage Students</h1>
+        
+        <div class="input-section">
+            <input type="text" id="studentNameInput" placeholder="Enter student name">
+        </div>
+
+        <div class="add-student-section">
+            <button id="addStudentBtn">Add Student</button>
+        </div>
+
+        <div class="student-table-container">
+            <table class="student-data-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Attended Lecs</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody">
+                    </tbody>
+            </table>
+            
+            <p id="emptyMessage" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                No students added yet. Use the input field above to add a student.
+            </p>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "sam-server",
+  "version": "0.1.0",
+  "description": "Prototype backend for Smart Attendance Marker (enrollments, attendance, timetable)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "better-sqlite3": "^8.4.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.6.7"
+  }
+}

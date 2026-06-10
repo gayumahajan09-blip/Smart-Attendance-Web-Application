@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LiFi Timetable Admin</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .card{ max-width:720px;margin:32px auto;padding:20px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.06) }
+    .form-input{ width:100%;padding:8px;border-radius:6px;border:1px solid #e6eef2 }
+    .btn{ padding:8px 12px;background:#1687a0;color:#fff;border-radius:8px;border:none;cursor:pointer }
+    table{ width:100%;border-collapse:collapse }
+    th,td{ padding:8px;border-bottom:1px solid #eee }
+  </style>
+</head>
+
+<body>
+
+  <!-- ------------------  ADMIN TOKEN SECTION ------------------ -->
+  <div class="card">
+    <h2>LiFi Tokens (Admin)</h2>
+    <p class="small">Add scheduled LiFi tokens for classrooms. The simulator page will use these entries to show active tokens.</p>
+
+    <div style="display:flex;gap:12px;margin-top:12px;">
+      <input id="classroom" class="form-input" placeholder="Classroom e.g. C101">
+      <input id="token" class="form-input" placeholder="Token string e.g. TKN-ABC-123">
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:8px;">
+      <input id="start" class="form-input" type="datetime-local">
+      <input id="end" class="form-input" type="datetime-local">
+      <button class="btn" id="addBtn">Add</button>
+      <button class="btn" id="clearTokensBtn" style="background:#b91c1c;margin-left:6px">Clear</button>
+    </div>
+
+    <div id="msg" style="margin-top:10px;display:none;font-weight:700"></div>
+
+    <h3 style="margin-top:18px">Saved Tokens</h3>
+    <div id="list"></div>
+
+    <p style="margin-top:12px;color:#64748b">If the server is offline, entries are stored locally.</p>
+  </div>
+
+
+
+
+  <!-- ------------------  TEACHER TIMETABLE SECTION ------------------ -->
+  <div class="card" style="margin-top:18px">
+    <h2>Add Timetable</h2>
+    <p class="small">Teachers can add their lecture timetable here (Lecture No, Subject, Time).</p>
+
+    <div style="display:flex;gap:12px;margin-top:12px;align-items:center;">
+      <input id="lecNo" class="form-input" placeholder="Lecture No (e.g. 1)">
+      <input id="subject" class="form-input" placeholder="Subject (e.g. Maths)">
+      <input id="time" class="form-input" placeholder="Time (e.g. 09:30 - 10:15)">
+      <button class="btn" id="addTeachBtn">Add</button>
+    </div>
+
+    <div id="teachMsg" style="margin-top:10px;display:none;font-weight:700"></div>
+
+    <h3 style="margin-top:18px">My Timetable</h3>
+    <div id="teachTable"></div>
+
+    <p style="margin-top:12px;color:#64748b">This timetable is stored locally for each teacher.</p>
+  </div>
+
+
+
+
+
+  <!-- ------------------  ADMIN TOKEN SCRIPT ------------------ -->
+  <script>
+    async function fetchList(){
+      try{
+        const resp = await fetch('/api/timetable');
+        if(!resp.ok) throw new Error();
+        const data = await resp.json();
+        renderList(data);
+      }catch{
+        const arr = JSON.parse(localStorage.getItem('sam_timetable')||'[]');
+        renderList(arr);
+      }
+    }
+
+    function renderList(items){
+    
+      const wrap = document.getElementById('list');
+      if(!items.length){
+        wrap.innerHTML = '<div style="color:#64748b">No entries</div>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Classroom</th><th>Token</th><th>Start</th><th>End</th></tr></thead><tbody>';
+      items.forEach(it=>{
+        html += `<tr>
+                  <td>${it.classroom}</td>
+                  <td>${it.token}</td>
+                  <td>${it.start}</td>
+                  <td>${it.end}</td>
+                </tr>`;
+      });
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+    }
+
+    document.getElementById('addBtn').addEventListener('click', async ()=>{
+      const classroom = document.getElementById('classroom').value.trim();
+      const token = document.getElementById('token').value.trim();
+      const start = document.getElementById('start').value;
+      const end = document.getElementById('end').value;
+
+      const msg = document.getElementById('msg');
+      msg.style.display = 'none';
+
+      if(!classroom || !token || !start || !end){
+        msg.textContent = "Fill all fields";
+        msg.style.color = "#b91c1c";
+        msg.style.display = "block";
+        return;
+      }
+
+      try{
+        const res = await fetch('/api/timetable', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ classroom, token, start, end })
+        });
+        if(!res.ok) throw new Error();
+        msg.textContent="Saved to server";
+        msg.style.color="#15803d";
+        msg.style.display="block";
+        fetchList();
+      }catch{
+        const arr = JSON.parse(localStorage.getItem('sam_timetable')||'[]');
+        arr.push({ classroom, token, start, end });
+        localStorage.setItem('sam_timetable', JSON.stringify(arr));
+        msg.textContent="Saved locally";
+        msg.style.color="#15803d";
+        msg.style.display="block";
+        fetchList();
+      }
+    });
+
+    // Clear local token history (teacher convenience) — only clears localStorage fallback
+    document.getElementById('clearTokensBtn').addEventListener('click', function(){
+      if(!confirm('Clear all locally stored tokens? This only clears local fallback entries.') ) return;
+      try{ localStorage.removeItem('sam_timetable'); }catch(e){}
+      fetchList();
+      const msg = document.getElementById('msg'); msg.textContent = 'Local token history cleared.'; msg.style.color='#15803d'; msg.style.display='block';
+    });
+
+    fetchList();
+  </script>
+
+
+
+
+
+  <!-- ------------------  TEACHER TIMETABLE SCRIPT ------------------ -->
+  <script>
+    (function(){
+      const KEY = 'sam_teacher_timetable';
+      const tableWrap = document.getElementById('teachTable');
+      const msg = document.getElementById('teachMsg');
+
+      function load(){
+        const arr = JSON.parse(localStorage.getItem(KEY)||'[]');
+        render(arr);
+      }
+
+      function render(arr){
+        if(!arr.length){
+          tableWrap.innerHTML = '<div style="color:#64748b">No timetable added</div>';
+          return;
+        }
+
+        let html = `<table>
+                      <thead><tr>
+                        <th>#</th>
+                        <th>Lecture</th>
+                        <th>Subject</th>
+                        <th>Time</th>
+                        <th>Action</th>
+                      </tr></thead><tbody>`;
+
+        arr.forEach((r,i)=>{
+          html += `<tr data-idx="${i}">
+                      <td>${i+1}</td>
+                      <td>${r.lecNo}</td>
+                      <td>${r.subject}</td>
+                      <td>${r.time}</td>
+                      <td><button class="btn" onclick="delTeach(${i})" style="background:#b91c1c">Delete</button></td>
+                   </tr>`;
+        });
+
+        html += '</tbody></table>';
+        tableWrap.innerHTML = html;
+      }
+
+      document.getElementById('addTeachBtn').addEventListener('click', ()=>{
+        const lecNo = document.getElementById('lecNo').value.trim();
+        const subject = document.getElementById('subject').value.trim();
+        const time = document.getElementById('time').value.trim();
+
+        if(!lecNo || !subject || !time){
+          msg.textContent = "Fill all fields";
+          msg.style.color="#b91c1c";
+          msg.style.display="block";
+          return;
+        }
+
+        const arr = JSON.parse(localStorage.getItem(KEY)||'[]');
+        arr.push({ lecNo, subject, time });
+        localStorage.setItem(KEY, JSON.stringify(arr));
+
+        msg.textContent = "Saved";
+        msg.style.color="#15803d";
+        msg.style.display="block";
+
+        document.getElementById('lecNo').value='';
+        document.getElementById('subject').value='';
+        document.getElementById('time').value='';
+
+        load();
+      });
+
+      window.delTeach = function(i){
+        const arr = JSON.parse(localStorage.getItem(KEY)||'[]');
+        arr.splice(i,1);
+        localStorage.setItem(KEY, JSON.stringify(arr));
+        load();
+      };
+
+      load();
+    })();
+  </script>
+
+</body>
+</html>

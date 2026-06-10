@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Smart Attendance System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+   <nav class="navbar" style="background: #34495e; padding: 0;">
+  <div style="display: flex; align-items: center; padding: 12px 24px; position: relative;">
+    <span style="
+      position: absolute;
+      left: 0; right: 0;
+      margin: auto;
+      text-align: center;
+      color: #fff;
+      font-size: 1.3em;
+      font-weight: 600;
+      width: fit-content;
+      pointer-events: none;
+    ">ATTENDANCE MANAGEMENT</span>
+    
+    <a href="landing.html" title="Logout" style="
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 90px;
+      height: 38px;
+      background: #fff;
+      border-radius: 19px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      color: #34495e;
+      font-size: 1em;
+      font-weight: bold;
+      text-decoration: none;
+      border: 1px solid #ccc;
+      transition: background 0.2s;
+    ">
+      Logout
+    </a>
+  </div>
+  <ul class="navbar-links" style="margin:0;padding:0;display:flex;justify-content:center;background:#2c3e50;">
+    <li><a href="home.html">Home</a></li>
+    <li><a href="students.html">Manage Students</a></li>
+    <li><a href="records.html">Records</a></li>
+    <li><a href="landing.html">Logout</a></li>
+  </ul>
+</nav>
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <h1 class="main-heading">ATTENDANCE SYSTEM</h1>
+            <p class="sub-heading">Manage your students, mark attendance, and view records efficiently. This system is designed to simplify attendance tracking.</p>
+        </header>
+
+      
+<div class="card-container" style="flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; padding: 0 10px;">
+
+    <div class="square-box" style="margin: 0 auto;">
+        <h3 class="card-title">Manage Students</h3>
+        <p class="card-description">Add, view, or update the list of students in your class. Keep your student register organized and up-to-date.</p>
+        <a href="students.html" class="btn btn-primary">Go to Students</a>
+    </div>
+
+    
+
+    <div class="square-box">
+        <h3 class="card-title">View Records</h3>
+        <p class="card-description">Access and review past attendance records. Filter by date or student to get detailed insights.</p>
+        <a href="records.html" class="btn btn-primary">Go to Records</a>
+    </div>
+
+    <div class="square-box">
+      <h3 class="card-title">Schedule Token</h3>
+      <p class="card-description">Create LiFi tokens and add timetable entries for classrooms. Teachers can schedule tokens here.</p>
+      <a href="token_admin.html" class="btn btn-primary">Schedule Token</a>
+    </div>
+
+</div>
+
+
+           
+
+        <p class="select-option-text">Select an option from the menu.</p>
+    </main>
+
+</body>
+</html>

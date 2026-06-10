@@ -1,0 +1,313 @@
+/* ===================================================
+   1. BASE STYLES
+   =================================================== */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    /* Light background used for the dashboard and general page */
+    background: #eef2f6; 
+    color: #333;
+}
+
+/* FIX: Apply border-box globally to ensure padding and border
+   are included inside the element's width, preventing overflow. */
+*, *::before, *::after {
+    box-sizing: border-box; 
+}
+
+/* ===================================================
+   2. DASHBOARD NAV BAR STYLES (home.html & others)
+   =================================================== */
+
+.navbar {
+    background: #34495e; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-top-area {
+    padding: 15px 0 10px 0;
+    text-align: center;
+}
+
+.navbar-title {
+    color: #fff;
+    margin: 0;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.navbar-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center; 
+    background: #2c3e50;
+}
+
+.navbar-links li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 12px 20px;
+    display: block;
+    transition: background 0.2s;
+}
+
+.navbar-links li a:hover {
+    background: #1abc9c;
+}
+
+/* ===================================================
+   3. DASHBOARD MAIN CONTENT STYLES (home.html)
+   =================================================== */
+
+.dashboard-main {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 0 20px;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.main-heading {
+    font-size: 2.5em;
+    color: #34495e;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.sub-heading {
+    color: #777;
+    font-size: 1.1em;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Card Layout */
+.card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin-top: 60px;
+}
+
+.square-box {
+  width: 300px;
+  height: 300px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(52,73,94,0.10);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.card-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.card-title {
+    color: #34495e;
+    margin-top: 0;
+    font-size: 1.4em;
+    font-weight: 600;
+    padding-bottom: 10px;
+}
+
+.card-description {
+    color: #555;
+    flex-grow: 1;
+    margin-bottom: 25px;
+}
+
+.select-option-text {
+    text-align: left;
+    margin-top: 40px;
+    color: #666;
+    font-style: italic;
+    padding-left: 10px;
+}
+
+/* DASHBOARD BUTTON (Used by home.html) */
+.btn-primary {
+    display: block;
+    width: 100%;
+    padding: 15px 15px; 
+    background: #007bff; 
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+
+/* ===================================================
+   4. LOGIN PAGE STYLES (index.html)
+   =================================================== */
+
+.login-container {
+    width: 320px; 
+    margin: 100px auto;
+    padding: 30px;
+    background: #fff;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-container h2 {
+    color: #333; 
+    font-size: 1.5em; 
+    font-weight: bold;
+    margin-bottom: 25px;
+}
+
+/* Input Styles for Login Page */
+.login-container input {
+    margin: 10px 0; 
+    padding: 12px;
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1.1em; 
+}
+
+/* Button Styles for Login Page */
+.login-container button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    transition: background 0.2s;
+    
+    background: #333; 
+    color: white;
+}
+
+.login-container button:hover {
+    background: #555; 
+}
+
+/* ===================================================
+   5. STUDENTS PAGE STYLES (students.html)
+   =================================================== */
+
+.page-title {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #333;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 25px;
+    text-align: left; 
+}
+
+.add-student-section input[type="text"] {
+  width: 250px;
+  padding: 8px;
+  margin: 5px 10px 5px 0;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+
+.student-input {
+    /* Uses the same style as the login input for consistency */
+    padding: 12px;
+    width: 100%;
+    margin-bottom: 0; 
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1em; 
+}
+
+
+.add-student-section {
+  background: #34495e;
+  padding: 20px 20px 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-student-section input[type="text"] {
+  width: 180px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin: 0;
+}
+
+.add-student-section button {
+  padding: 10px 22px;
+  font-size: 1.1em;
+  font-weight: bold;
+  background: #1abc9c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.add-student-section button:hover {
+  background: #16a085;
+}
+
+.add-student-btn:hover {
+    background: #555;
+}
+
+.student-list-header {
+    background: #333; /* Dark background to match the screenshot */
+    color: white;
+    padding: 10px 15px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border-radius: 0;
+    margin-bottom: 15px;
+}
+
+.student-item {
+    padding: 5px 15px;
+    margin: 0;
+    font-size: 1em;
+    color: #333;
+}
+
+.navbar-links li a {
+    font-size: 1.3em; /* Increase this value for larger text */
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    padding: 12px 18px;
+    display: inline-block;
+    transition: background 0.2s;
+}

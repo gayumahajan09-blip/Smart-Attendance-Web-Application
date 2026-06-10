@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Teacher Enrollment - Smart Attendance</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .card{ max-width:720px;margin:32px auto;padding:20px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.06) }
+    .row{ display:flex;gap:12px }
+    .col{ flex:1 }
+    .preview{ width:160px;height:160px;border-radius:8px;object-fit:cover;border:1px solid #e6eef2 }
+    .btn{ padding:10px 14px;background:#1687a0;color:#fff;border:0;border-radius:8px;cursor:pointer }
+    .small{ color:#64748b }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Enroll Student</h2>
+    <p class="small">Add student name, roll, username/email and capture or upload a photo. This stores enrollment locally (for prototype).</p>
+
+    <div style="display:flex;gap:18px;align-items:flex-start;margin-top:12px;">
+      <div style="flex:1;">
+        <div class="form-group">
+          <label>Full name</label>
+          <input id="st_name" class="form-input" type="text" placeholder="Student name">
+        </div>
+        <div class="form-group">
+          <label>Roll no / ID</label>
+          <input id="st_roll" class="form-input" type="text" placeholder="Roll number">
+        </div>
+        <div class="form-group">
+          <label>Username / Email</label>
+          <input id="st_username" class="form-input" type="text" placeholder="username or email">
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;">
+          <button class="btn" id="captureBtn">Use Camera</button>
+          <input type="file" id="photoUpload" accept="image/*">
+          <button class="btn" id="saveEnroll">Save Enrollment</button>
+        </div>
+        <div id="msg" style="margin-top:10px;font-weight:700;display:none"></div>
+      </div>
+
+      <div style="width:180px;text-align:center;">
+        <video id="video" width="160" height="160" autoplay style="display:none;border-radius:8px;object-fit:cover;border:1px solid #e6eef2"></video>
+        <canvas id="canvas" width="160" height="160" style="display:none"></canvas>
+        <img id="preview" class="preview" src="" alt="preview">
+        <div style="margin-top:8px;color:#64748b;font-size:0.9rem">Preview</div>
+      </div>
+    </div>
+    <p style="margin-top:18px;color:#64748b">Note: This prototype stores enrolled students in your browser storage (localStorage). For production we will store enrollments on a server database and extract face descriptors for matching.</p>
+  </div>
+
+  <script>
+    let stream = null;
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const preview = document.getElementById('preview');
+    const captureBtn = document.getElementById('captureBtn');
+    const photoUpload = document.getElementById('photoUpload');
+    const saveBtn = document.getElementById('saveEnroll');
+    const msg = document.getElementById('msg');
+
+    captureBtn.addEventListener('click', async ()=>{
+      msg.style.display='none';
+      if(!stream){
+        try{
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+          video.style.display = 'block';
+          captureBtn.textContent = 'Take Photo';
+          return;
+        }catch(e){ msg.textContent='Camera access was denied or not available.'; msg.style.color='#b91c1c'; msg.style.display='block'; return; }
+      }
+      // take snapshot
+      canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+      const data = canvas.toDataURL('image/jpeg',0.9);
+      preview.src = data;
+      // stop stream
+      stream.getTracks().forEach(t=>t.stop()); stream=null; video.style.display='none';
+      captureBtn.textContent = 'Use Camera';
+    });
+
+    photoUpload.addEventListener('change', function(e){
+      const f = this.files && this.files[0];
+      if(!f) return;
+      const reader = new FileReader();
+      reader.onload = function(){ preview.src = reader.result; };
+      reader.readAsDataURL(f);
+    });
+
+    saveBtn.addEventListener('click', function(){
+      const name = document.getElementById('st_name').value.trim();
+      const roll = document.getElementById('st_roll').value.trim();
+      const username = document.getElementById('st_username').value.trim();
+      const photo = preview.src || '';
+      msg.style.display='none';
+
+      if(!name || !roll || !username || !photo){ msg.textContent='Please fill all fields and provide a photo.'; msg.style.color='#b91c1c'; msg.style.display='block'; return; }
+
+      const key = 'sam_students';
+      const arr = JSON.parse(localStorage.getItem(key)||'[]');
+      // unique by username+role (role is teacher-enrolled student so role=student)
+      const exists = arr.find(s=> s.username && s.username.toLowerCase() === username.toLowerCase());
+      if(exists){ msg.textContent='A student with that username already exists.'; msg.style.color='#b91c1c'; msg.style.display='block'; return; }
+
+      const record = { fullname: name, roll: roll, username: username, photo: photo, created: Date.now() };
+      // Try to POST to server, otherwise save locally
+      (async function(){
+        try{
+          const res = await fetch('/api/enroll', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(record) });
+          if(res.ok){ msg.textContent='Enrollment saved to server.'; msg.style.color='#15803d'; msg.style.display='block';
+            document.getElementById('st_name').value=''; document.getElementById('st_roll').value=''; document.getElementById('st_username').value=''; preview.src='';
+            return;
+          }
+          throw new Error('server');
+        }catch(e){
+          arr.push(record);
+          localStorage.setItem(key, JSON.stringify(arr));
+          msg.textContent='Enrollment saved locally (server offline).'; msg.style.color='#15803d'; msg.style.display='block';
+          document.getElementById('st_name').value=''; document.getElementById('st_roll').value=''; document.getElementById('st_username').value=''; preview.src='';
+        }
+      })();
+      // clear fields
+      document.getElementById('st_name').value=''; document.getElementById('st_roll').value=''; document.getElementById('st_username').value=''; preview.src='';
+    });
+  </script>
+  <script>
+    (function(){
+      if(document.getElementById('globalLogoutBtn')) return;
+      const a = document.createElement('a');
+      a.id = 'globalLogoutBtn';
+      a.href = 'landing.html';
+      a.textContent = 'Logout';
+      Object.assign(a.style, {position:'fixed', top:'12px', right:'12px', zIndex:999999, background:'#fff', color:'#34495e', padding:'8px 12px', borderRadius:'19px', textDecoration:'none', fontWeight:'700', border:'1px solid #ccc', display:'flex', alignItems:'center', justifyContent:'center', width:'90px', height:'38px'});
+      document.body.appendChild(a);
+    })();
+  </script>
+</body>
+</html>

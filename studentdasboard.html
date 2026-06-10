@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="wificheck.js"></script>
+  <style>
+    .dashboard-main { max-width:1000px; margin:36px auto; padding:0 20px; }
+    .welcome { text-align:center; margin-bottom:18px; }
+    .welcome h2 { margin:0; color:#34495e; font-size:1.6rem; }
+    .welcome p { margin:6px 0 0; color:#6b7280 }
+    .card-container { display:flex; gap:28px; justify-content:center; flex-wrap:wrap; margin-top:22px; }
+    .square-box.student { width:320px; height:220px; display:flex; flex-direction:column; justify-content:space-between; align-items:center; padding:22px; }
+    .action-icon { font-size:48px; margin-top:6px; }
+    .card-desc { color:#556074; font-size:0.98rem; padding:0 6px; }
+    @media (max-width:640px){ .square-box.student{ width:90%; height:auto; } }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-main">
+    <div class="welcome">
+      <h2 id="greet">Welcome, Student</h2>
+      <p id="sub">Use the options below to mark your attendance or view your records.</p>
+    </div>
+
+    <div class="card-container">
+      <div class="square-box student" style="background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.06);">
+        <div style="text-align:center;">
+          <div class="action-icon">📝</div>
+          <h3 class="card-title" style="margin:10px 0 6px;">Mark Attendance</h3>
+          <div class="card-desc">Quickly mark your presence for today.</div>
+        </div>
+        <a href="student_mark.html" class="btn-primary">Mark Attendance</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      // add a simple logout pill if not present
+      if(!document.getElementById('globalLogoutBtn')){
+        const a = document.createElement('a');
+        a.id = 'globalLogoutBtn';
+        a.href = 'landing.html';
+        a.textContent = 'Logout';
+        Object.assign(a.style, {position:'fixed', top:'12px', right:'12px', zIndex:999999, background:'#fff', color:'#34495e', padding:'8px 12px', borderRadius:'19px', textDecoration:'none', fontWeight:'700', border:'1px solid #ccc', display:'flex', alignItems:'center', justifyContent:'center', width:'90px', height:'38px'});
+        document.body.appendChild(a);
+      }
+
+      // Prefill greeting from session if available
+      try{
+        const s = JSON.parse(localStorage.getItem('sam_session')||'{}');
+        if(s && s.username){
+          const g = document.getElementById('greet'); if(g) g.textContent = 'Welcome, ' + (s.fullname || s.username);
+          const sub = document.getElementById('sub'); if(sub) sub.textContent = 'Logged in as ' + (s.role || 'student') + ' — choose an action below.';
+        }
+      }catch(e){}
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Attendance Records</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="wificheck.js"></script>
+  <style>
+    .card{ max-width:900px;margin:28px auto;padding:18px;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.06); }
+    table{ width:100%; border-collapse:collapse }
+    th,td{ padding:10px;border-bottom:1px solid #eee;text-align:left }
+    th{ background:#f8fafb }
+    .no-data{ text-align:center;padding:18px;color:#64748b }
+  </style>
+</head>
+<body>
+  <div class="header-bar" id="greet">My Records</div>
+  <div class="card">
+    <h3>Attendance Records</h3>
+    <div id="tableWrap"></div>
+    <div style="margin-top:12px"><a href="studentdasboard.html" class="btn" style="background:#1687a0;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none">Back to Dashboard</a></div>
+  </div>
+
+  <script>
+    (function(){
+      const wrap = document.getElementById('tableWrap');
+      try{
+        const s = JSON.parse(localStorage.getItem('sam_session')||'{}');
+        if(!s || !s.username){ wrap.innerHTML = '<div class="no-data">No active session. Please login.</div>'; return; }
+        document.getElementById('greet').textContent = 'My Records - ' + (s.fullname || s.username);
+        const all = JSON.parse(localStorage.getItem('sam_attendance')||'[]');
+        const mine = all.filter(r=> r.username && r.username.toLowerCase() === (s.username||'').toLowerCase());
+        if(!mine.length){ wrap.innerHTML = '<div class="no-data">No attendance records yet.</div>'; return; }
+        let html = '<table><thead><tr><th>#</th><th>Date</th><th>Subject</th><th>Status</th><th>Marked At</th></tr></thead><tbody>';
+        mine.forEach((row, idx)=>{
+          const d = row.date || '';
+          const subj = row.subject || '-';
+          const st = row.status || '-';
+          const marked = row.ts ? new Date(row.ts).toLocaleString() : '';
+          html += `<tr><td>${idx+1}</td><td>${d}</td><td>${subj}</td><td>${st}</td><td>${marked}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        wrap.innerHTML = html;
+      }catch(e){ wrap.innerHTML = '<div class="no-data">Error reading records.</div>'; }
+    })();
+  </script>
+  <script>
+    (function(){
+      if(document.getElementById('globalLogoutBtn')) return;
+      const a = document.createElement('a');
+      a.id = 'globalLogoutBtn';
+      a.href = 'landing.html';
+      a.textContent = 'Logout';
+      Object.assign(a.style, {position:'fixed', top:'12px', right:'12px', zIndex:999999, background:'#fff', color:'#34495e', padding:'8px 12px', borderRadius:'19px', textDecoration:'none', fontWeight:'700', border:'1px solid #ccc', display:'flex', alignItems:'center', justifyContent:'center', width:'90px', height:'38px'});
+      document.body.appendChild(a);
+    })();
+  </script>
+</body>
+</html>

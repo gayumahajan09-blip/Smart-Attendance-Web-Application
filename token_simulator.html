@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LiFi Token Simulator</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .card{ max-width:720px;margin:32px auto;padding:20px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.06) }
+    .active{ font-size:1.3rem;color:#0b7285;font-weight:700 }
+    .small{ color:#64748b }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>LiFi Token Simulator</h2>
+    <p class="small">Select a classroom to view the currently active token (based on timetable). Polls server every 10s; falls back to localStorage timetable if server offline.</p>
+
+    <div style="display:flex;gap:12px;margin-top:12px;align-items:center;">
+      <input id="classroom" class="form-input" placeholder="Classroom e.g. C101">
+      <button class="btn" id="watchBtn">Watch</button>
+    </div>
+
+    <div style="margin-top:18px">
+      <div>Current active token for <span id="clsName">-</span>:</div>
+      <div id="tokenDisplay" class="active">-</div>
+      <div id="period" class="small" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <script>
+    let interval = null;
+    async function checkToken(classroom){
+      try{
+        const resp = await fetch('/api/active-token?classroom=' + encodeURIComponent(classroom));
+        if(resp.ok){ const data = await resp.json(); if(data && data.length){ const d = data[0]; document.getElementById('tokenDisplay').textContent = d.token; document.getElementById('period').textContent = 'Active until: '+d.end; } else { document.getElementById('tokenDisplay').textContent = '-'; document.getElementById('period').textContent='No active token'; } return; }
+        throw new Error('no server');
+      }catch(e){
+        // fallback to localStorage timetable
+        const arr = JSON.parse(localStorage.getItem('sam_timetable')||'[]');
+        const now = new Date();
+        const found = arr.find(it => it.classroom === classroom && new Date(it.start) <= now && new Date(it.end) >= now);
+        if(found){ document.getElementById('tokenDisplay').textContent = found.token; document.getElementById('period').textContent = 'Active until: '+found.end; }
+        else { document.getElementById('tokenDisplay').textContent='-'; document.getElementById('period').textContent='No active token'; }
+      }
+    }
+
+    document.getElementById('watchBtn').addEventListener('click', ()=>{
+      const cls = document.getElementById('classroom').value.trim();
+      if(!cls) return alert('Enter classroom');
+      document.getElementById('clsName').textContent = cls;
+      if(interval) clearInterval(interval);
+      checkToken(cls);
+      interval = setInterval(()=> checkToken(cls), 10000);
+    });
+  </script>
+  <script>
+    (function(){
+      if(document.getElementById('globalLogoutBtn')) return;
+      const a = document.createElement('a');
+      a.id = 'globalLogoutBtn';
+      a.href = 'landing.html';
+      a.textContent = 'Logout';
+      Object.assign(a.style, {position:'fixed', top:'12px', right:'12px', zIndex:999999, background:'#fff', color:'#34495e', padding:'8px 12px', borderRadius:'19px', textDecoration:'none', fontWeight:'700', border:'1px solid #ccc', display:'flex', alignItems:'center', justifyContent:'center', width:'90px', height:'38px'});
+      document.body.appendChild(a);
+    })();
+  </script>
+</body>
+</html>

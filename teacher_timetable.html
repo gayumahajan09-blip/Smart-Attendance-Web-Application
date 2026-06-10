@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Teacher Timetable</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .card{ max-width:820px;margin:32px auto;padding:20px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.06) }
+    .form-row{ display:flex;gap:12px;align-items:center }
+    .form-input{ padding:8px;border-radius:6px;border:1px solid #e6eef2 }
+    .btn{ padding:8px 12px;background:#1687a0;color:#fff;border-radius:8px;border:none;cursor:pointer }
+    table{ width:100%;border-collapse:collapse;margin-top:14px }
+    th,td{ padding:8px;border-bottom:1px solid #eee;text-align:left }
+    .muted{ color:#64748b }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Teacher Timetable</h2>
+    <p class="muted">Add your class lectures below. These entries are stored locally in the browser; the server can be used if available.</p>
+
+    <div style="margin-top:12px">
+      <div class="form-row">
+        <input id="lecNo" class="form-input" placeholder="Lecture No (e.g. 1)">
+        <input id="subject" class="form-input" placeholder="Subject (e.g. Math)">
+        <input id="time" class="form-input" placeholder="Time (e.g. 09:30 - 10:15)">
+        <button id="addRow" class="btn">Add</button>
+      </div>
+      <div id="msg" style="margin-top:10px;display:none;font-weight:700"></div>
+    </div>
+
+    <h3 style="margin-top:18px">My Timetable</h3>
+    <div id="tableWrap"></div>
+    <p style="margin-top:12px;color:#64748b">These entries are per-teacher in local storage. If you want server-backed timetable, use the admin token page.</p>
+  </div>
+
+  <script>
+    const key = 'sam_teacher_timetable';
+    const msg = document.getElementById('msg');
+    function load(){
+      const arr = JSON.parse(localStorage.getItem(key)||'[]');
+      render(arr);
+    }
+    function render(arr){
+      const wrap = document.getElementById('tableWrap');
+      if(!arr.length){ wrap.innerHTML = '<div class="muted">No timetable yet. Add rows above.</div>'; return; }
+      let html = '<table><thead><tr><th>#</th><th>Lecture No</th><th>Subject</th><th>Time</th><th>Action</th></tr></thead><tbody>';
+      arr.forEach((r,idx)=>{
+        html += `<tr data-idx="${idx}"><td>${idx+1}</td><td>${escapeHtml(r.lecNo)}</td><td>${escapeHtml(r.subject)}</td><td>${escapeHtml(r.time)}</td><td><button class="btn edit">Edit</button> <button class="btn del" style="background:#b91c1c">Delete</button></td></tr>`;
+      });
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+      attachHandlers();
+    }
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+    function attachHandlers(){
+      document.querySelectorAll('#tableWrap .del').forEach(btn=>{
+        btn.addEventListener('click', function(){
+          const tr = this.closest('tr'); const idx = Number(tr.dataset.idx);
+          const arr = JSON.parse(localStorage.getItem(key)||'[]'); arr.splice(idx,1); localStorage.setItem(key, JSON.stringify(arr)); load();
+        });
+      });
+      document.querySelectorAll('#tableWrap .edit').forEach(btn=>{
+        btn.addEventListener('click', function(){
+          const tr = this.closest('tr'); const idx = Number(tr.dataset.idx);
+          const arr = JSON.parse(localStorage.getItem(key)||'[]');
+          const row = arr[idx];
+          document.getElementById('lecNo').value = row.lecNo;
+          document.getElementById('subject').value = row.subject;
+          document.getElementById('time').value = row.time;
+          // remove old row
+          arr.splice(idx,1); localStorage.setItem(key, JSON.stringify(arr)); load();
+          msg.textContent = 'Edit the fields and click Add to save changes.'; msg.style.color='#15803d'; msg.style.display='block';
+          setTimeout(()=>msg.style.display='none',3000);
+        });
+      });
+    }
+
+    document.getElementById('addRow').addEventListener('click', function(){
+      const lecNo = document.getElementById('lecNo').value.trim();
+      const subject = document.getElementById('subject').value.trim();
+      const time = document.getElementById('time').value.trim();
+      if(!lecNo || !subject || !time){ msg.textContent='Fill all fields'; msg.style.color='#b91c1c'; msg.style.display='block'; return; }
+      const arr = JSON.parse(localStorage.getItem(key)||'[]');
+      arr.push({ lecNo, subject, time, created: Date.now() });
+      localStorage.setItem(key, JSON.stringify(arr));
+      document.getElementById('lecNo').value=''; document.getElementById('subject').value=''; document.getElementById('time').value='';
+      msg.textContent='Saved'; msg.style.color='#15803d'; msg.style.display='block'; setTimeout(()=>msg.style.display='none',2000);
+      load();
+    });
+
+    load();
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>SAM — Admin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;margin:18px;color:#111}
+    h1{font-size:20px;margin-bottom:6px}
+    .row{display:flex;gap:18px;align-items:flex-start}
+    .card{border:1px solid #ddd;padding:12px;border-radius:8px;width:320px}
+    img.thumb{width:100%;height:180px;object-fit:cover;border-radius:6px;background:#f6f6f6}
+    .small{font-size:13px;color:#555}
+    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+    a.btn{display:inline-block;padding:8px 10px;background:#0066cc;color:#fff;border-radius:6px;text-decoration:none}
+    .muted{color:#666;font-size:13px}
+    pre{background:#111;color:#eee;padding:8px;border-radius:6px;overflow:auto}
+  </style>
+</head>
+<body>
+  <h1>Smart Attendance Marker — Admin</h1>
+  <p class="muted">This page lists enrolled students and attendance snapshots stored in the server database. Use it to visually verify photos.</p>
+
+  <section>
+    <h2>Students</h2>
+    <div id="students" class="list"></div>
+  </section>
+
+  <section style="margin-top:18px">
+    <h2>Attendance</h2>
+    <div id="attendance" class="list"></div>
+  </section>
+
+  <script>
+    const $ = sel=>document.querySelector(sel);
+    // Use explicit API base so admin.html works even if opened from a different dev server (e.g. Live Server on :5500).
+    const API_BASE = 'http://localhost:3001';
+
+    async function fetchJson(path){
+      // try same-origin first, then explicit API_BASE as fallback
+      const tries = [path, API_BASE + path];
+      for(const p of tries){
+        try{
+          const r = await fetch(p);
+          const ct = r.headers.get('content-type') || '';
+          if(!r.ok) throw new Error('HTTP '+r.status+' '+r.statusText);
+          if(ct.includes('application/json')) return await r.json();
+          // if not JSON, attempt to parse (will throw) — move to next
+          const text = await r.text();
+          try{ return JSON.parse(text); }catch(e){ throw new Error('Not JSON response from '+p); }
+        }catch(e){ /* try next */ }
+      }
+      throw new Error('Could not fetch JSON from API');
+    }
+
+    async function loadStudents(){
+      const container = $('#students'); container.innerHTML = 'Loading...';
+      try{
+  const arr = await fetchJson('/api/students');
+        if(!arr || arr.length===0){ container.innerHTML = '<div class="muted">No students found. Enroll via <a href="/teacher_enroll.html">teacher_enroll.html</a></div>'; return }
+        container.innerHTML = '';
+        arr.forEach(s=>{
+          const el = document.createElement('div'); el.className='card';
+          const img = document.createElement('img'); img.className='thumb';
+          img.src = '/api/student-photo/' + encodeURIComponent(s.username);
+          img.alt = s.username;
+          img.onerror = ()=>{ img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="#f3f3f3"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#888" font-size="20">no photo</text></svg>') }
+          el.appendChild(img);
+          const info = document.createElement('div'); info.className='small';
+          info.innerHTML = `<strong>${escapeHtml(s.fullname||s.username)}</strong><br/><span class="muted">username: ${escapeHtml(s.username||'')}</span><br/><span class="muted">roll: ${escapeHtml(s.roll||'')}</span>`;
+          el.appendChild(info);
+          container.appendChild(el);
+        })
+      }catch(e){ container.innerHTML = '<div class="muted">Error loading students: '+ e.message +'</div>' }
+    }
+
+    async function loadAttendance(){
+      const container = $('#attendance'); container.innerHTML = 'Loading...';
+      try{
+  const arr = await fetchJson('/api/attendance');
+        if(!arr || arr.length===0){ container.innerHTML = '<div class="muted">No attendance records found.</div>'; return }
+        container.innerHTML = '';
+        arr.forEach(a=>{
+          const el = document.createElement('div'); el.className='card';
+          const img = document.createElement('img'); img.className='thumb';
+          img.src = '/api/attendance-snapshot/' + encodeURIComponent(a.id);
+          img.alt = 'snap-'+a.id;
+          img.onerror = ()=>{ img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="#fafafa"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#888" font-size="18">no snapshot</text></svg>') }
+          el.appendChild(img);
+          const info = document.createElement('div'); info.className='small';
+          info.innerHTML = `<strong>${escapeHtml(a.username||'')}</strong> <span class="muted">(${new Date(a.ts||0).toLocaleString()})</span><br/>${escapeHtml(a.subject||'')} - ${escapeHtml(a.status||'')}`;
+          el.appendChild(info);
+          const link = document.createElement('a'); link.className='btn'; link.href = '/api/attendance-snapshot/' + encodeURIComponent(a.id); link.target = '_blank'; link.textContent = 'Open snapshot'; el.appendChild(document.createElement('br')); el.appendChild(link);
+          container.appendChild(el);
+        })
+      }catch(e){ container.innerHTML = '<div class="muted">Error loading attendance: '+ e.message +'</div>' }
+    }
+
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&"'<>]/g, c=>({ '&':'&amp;','"':'&quot;','"':'&quot;',"'":'&#39;','<':'&lt;','>':'&gt;' }[c])) }
+
+    // load on start
+    loadStudents(); loadAttendance();
+    // refresh every 10s
+    setInterval(()=>{ loadStudents(); loadAttendance(); },10000);
+  </script>
+  <script>
+    (function(){
+      if(document.getElementById('globalLogoutBtn')) return;
+      const a = document.createElement('a');
+      a.id = 'globalLogoutBtn';
+      a.href = 'landing.html';
+      a.textContent = 'Logout';
+      Object.assign(a.style, {position:'fixed', top:'12px', right:'12px', zIndex:999999, background:'#fff', color:'#34495e', padding:'8px 12px', borderRadius:'19px', textDecoration:'none', fontWeight:'700', border:'1px solid #ccc', display:'flex', alignItems:'center', justifyContent:'center', width:'90px', height:'38px'});
+      document.body.appendChild(a);
+    })();
+  </script>
+</body>
+</html>

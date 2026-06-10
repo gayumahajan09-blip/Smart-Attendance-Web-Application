@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <script src="wificheck.js"></script>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Mark Attendance - Student</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="wificheck.js"></script>  
+
+  <style>
+    .card{ max-width:520px;margin:40px auto;padding:24px;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.06); }
+    .card-title{ font-size:1.2rem;color:#34495e;font-weight:700;margin-bottom:12px }
+    .form-row{ margin-bottom:12px }
+    .form-input{ width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef2 }
+    .btn{ padding:10px 14px;background:#1687a0;color:#fff;border:0;border-radius:8px;cursor:pointer;font-weight:700 }
+    .small{ color:#64748b;font-size:0.95rem }
+      /* overlay shown when not on campus/demo mode */
+      #campus-block{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9999}
+      #campus-block .box{background:#fff;padding:20px;border-radius:10px;max-width:640px;color:#111}
+      #campus-block h2{margin-top:0}
+      #campus-block p{color:#444}
+      #campus-block a{display:inline-block;margin-top:10px;padding:8px 10px;background:#0b74de;color:#fff;border-radius:6px;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="header-bar" id="greet">Student Attendance</div>
+  <div class="card">
+    <div class="card-title">Mark Attendance</div>
+    <div class="form-row">
+      <label class="small">Date</label>
+      <input id="att_date" class="form-input" type="date">
+    </div>
+    <div class="form-row">
+      <label class="small">Subject</label>
+      <input id="att_subject" class="form-input" type="text" placeholder="Enter subject (optional)">
+    </div>
+    <div class="form-row">
+      <label class="small">Class</label>
+      <select id="att_class" class="form-input">
+        <option value="ENC">ENC</option>
+        <option value="IT">IT</option>
+        <option value="CE">CE</option>
+        <option value="CST">CST</option>
+        <option value="DS">DS</option>
+        <option value="AI">AI</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="small">Status</label>
+      <select id="att_status" class="form-input">
+        <option value="present">Present</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="small">Token (enter token provided by teacher)</label>
+      <input id="att_token" class="form-input" type="text" placeholder="Enter lecture token">
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn" id="captureBtn">Capture Photo</button>
+      <button class="btn" id="saveBtn">Save Attendance</button>
+      <div style="margin-top:12px"></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
+      <video id="cam" width="160" height="120" autoplay style="display:none;border:1px solid #e6eef2;border-radius:6px;object-fit:cover"></video>
+      <canvas id="snap" width="160" height="120" style="display:none"></canvas>
+      <img id="snapPreview" src="" alt="snapshot" style="width:160px;height:120px;border-radius:6px;object-fit:cover;border:1px solid #e6eef2">
+    </div>
+    <div id="msg" style="margin-top:10px;font-weight:700;display:none"></div>
+  </div>
+
+  <script>
+    (function(){
+      // prefill date
+      const dateInput = document.getElementById('att_date');
+      const today = new Date().toISOString().slice(0,10);
+      dateInput.value = today;
+
+      // webcam capture elements
+      const captureBtn = document.getElementById('captureBtn');
+      const cam = document.getElementById('cam');
+      const snap = document.getElementById('snap');
+      const snapPreview = document.getElementById('snapPreview');
+      let camStream = null;
+
+      captureBtn.addEventListener('click', async function(){
+        if(!camStream){
+          try{
+            camStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+            cam.srcObject = camStream; cam.style.display = 'block';
+            captureBtn.textContent = 'Take Snapshot';
+            return;
+          }catch(e){ const msg = document.getElementById('msg'); msg.style.display='block'; msg.style.color='#b91c1c'; msg.textContent='Camera not available or permission denied.'; return; }
+        }
+        // take snapshot
+        const ctx = snap.getContext('2d'); ctx.drawImage(cam,0,0,snap.width,snap.height);
+        const data = snap.toDataURL('image/jpeg',0.9);
+        snapPreview.src = data; snapPreview.style.display='block';
+        // stop camera
+        camStream.getTracks().forEach(t => t.stop()); camStream = null; cam.style.display='none'; captureBtn.textContent = 'Capture Photo';
+      });
+
+      // greet
+      try{
+        const s = JSON.parse(localStorage.getItem('sam_session')||'{}');
+        if(s && s.username) document.getElementById('greet').textContent = 'Mark Attendance - ' + (s.fullname || s.username);
+      }catch(e){}
+
+      document.getElementById('saveBtn').addEventListener('click', function(){
+        const date = dateInput.value;
+        const subject = document.getElementById('att_subject').value.trim();
+        const status = document.getElementById('att_status').value;
+        const msg = document.getElementById('msg'); msg.style.display='none';
+
+        try{
+          const s = JSON.parse(localStorage.getItem('sam_session')||'{}');
+          if(!s || !s.username){ msg.textContent='No active session. Please login.'; msg.style.color='#b91c1c'; msg.style.display='block'; return; }
+
+              const token = (document.getElementById('att_token').value||'').trim();
+
+              // verify token (server, then localStorage fallback)
+              // returns { ok: boolean, reason?: 'expired'|'notfound' }
+              async function verifyToken(tkn){
+                if(!tkn) return { ok:false, reason:'notfound' };
+                const now = new Date();
+                // try server endpoint
+                try{
+                  const resp = await fetch('/api/active-token');
+                  if(resp.ok){
+                    const data = await resp.json();
+                        if(Array.isArray(data)){
+                          const found = data.find(d=>String(d.token) === String(tkn));
+                          if(found){
+                            // Server endpoint only returns currently active tokens (start<=now<=end),
+                            // so if we find a match here treat it as valid.
+                            return { ok:true };
+                          }
+                        }
+                  }
+                }catch(e){ /* ignore server errors */ }
+                // fallback to local timetable
+                try{
+                  const arr = JSON.parse(localStorage.getItem('sam_timetable')||'[]');
+                  const found = arr.find(it => String(it.token) === String(tkn));
+                  if(found){
+                    const s = new Date(found.start);
+                    const e = new Date(found.end);
+                    if(now >= s && now <= e) return { ok:true };
+                    return { ok:false, reason:'expired' };
+                  }
+                }catch(e){}
+                return { ok:false, reason:'notfound' };
+              }
+
+              (async function(){
+                // require present status
+                if(status !== 'present'){
+                  msg.textContent = 'Only "Present" can be marked here.'; msg.style.color='#b91c1c'; msg.style.display='block'; return;
+                }
+
+                // require token
+                if(!token){ msg.textContent = 'Please enter the lecture token provided by your teacher.'; msg.style.color='#b91c1c'; msg.style.display='block'; return; }
+
+                msg.textContent = 'Verifying token...'; msg.style.color='#0b7285'; msg.style.display='block';
+                const tokenResult = await verifyToken(token);
+                if(!tokenResult.ok){
+                  if(tokenResult.reason === 'expired'){
+                    msg.textContent = 'Token has expired — you are out of time.'; msg.style.color='#b91c1c'; msg.style.display='block';
+                  }else{
+                    msg.textContent = 'Invalid or expired token. Ask your teacher for the current token.'; msg.style.color='#b91c1c'; msg.style.display='block';
+                  }
+                  return;
+                }
+
+                // require snapshot
+                const snapshot = document.getElementById('snapPreview').src || '';
+                if(!snapshot){ msg.textContent = 'Please capture a photo first.'; msg.style.color='#b91c1c'; msg.style.display='block'; return; }
+
+                const classroom = (document.getElementById('att_class') && document.getElementById('att_class').value) || '';
+                const rec = { username: s.username, role: s.role, date: date, subject: subject, classroom: classroom, status: status, ts: Date.now(), snapshot: snapshot, token: token };
+                const key = 'sam_attendance';
+                const arr = JSON.parse(localStorage.getItem(key)||'[]');
+                arr.push(rec);
+                localStorage.setItem(key, JSON.stringify(arr));
+
+                msg.textContent = 'Attendance saved.'; msg.style.color='#15803d'; msg.style.display='block';
+              })();
+        }catch(e){ msg.textContent='Error saving attendance.'; msg.style.color='#b91c1c'; msg.style.display='block'; }
+      });
+    })();
+  </script>
+  <script>
+    (function(){
+      if(document.getElementById('globalLogoutBtn')) return;
+      const a = document.createElement('a');
+      a.id = 'globalLogoutBtn';
+      a.href = 'landing.html';
+      a.textContent = 'Logout';
+      Object.assign(a.style, {position:'fixed', top:'12px', right:'12px', zIndex:999999, background:'#fff', color:'#34495e', padding:'8px 12px', borderRadius:'19px', textDecoration:'none', fontWeight:'700', border:'1px solid #ccc', display:'flex', alignItems:'center', justifyContent:'center', width:'90px', height:'38px'});
+      document.body.appendChild(a);
+    })();
+  </script>
+</body>
+</html>
